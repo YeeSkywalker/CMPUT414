@@ -41,12 +41,12 @@ classifier.eval()
 content_point = content_point.transpose(1, 0).contiguous()
 style_point = style_point.transpose(1, 0).contiguous()
 
-content_point = Variable(content_point.view(1, content_point.size()[0], point1.size()[1]))
-pred_content, _, _ = classifier(content_point)
+content_point = Variable(content_point.view(1, content_point.size()[0], content_point.size()[1]))
+pred_content, _ = classifier(content_point)
 pred_choice_content = pred_content.data.max(2)[1]
 
 style_point = Variable(style_point.view(1, style_point.size()[0], style_point.size()[1]))
-pred_style, _, _ = classifier(style_point)
+pred_style, _ = classifier(style_point)
 pred_choice_style = pred_style.data.max(2)[1]
 
 cmap = plt.cm.get_cmap("hsv", 10)
@@ -144,6 +144,6 @@ for key in style_dict:
 plt.title("Style Object")
  
 # show plot
-plt.savefig('content.pdf') 
+plt.savefig('style.pdf') 
 plt.close()
 

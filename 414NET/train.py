@@ -10,6 +10,19 @@ import argparse
 from tqdm import tqdm
 from model import DatasetGenerator, SegmentNet
 
+'''
+    By Yee Lin solo effort
+'''
+
+# Train model process
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, default='', help='Saved Model')
 parser.add_argument('--dataset', type=str, required=True, help='Dataset Path')
@@ -20,9 +33,11 @@ batch_size = 32
 epochs = 100
 workers = 4
 
+# Generate the train set and the test set
 train_set = DatasetGenerator(path=args.dataset, object_type=args.object)
 test_set = DatasetGenerator(path=args.dataset, train_flag=False, object_type=args.object)
 
+# Load data set to PyTorch dataloader
 train_dataloader = D.DataLoader(
     train_set,
     batch_size=batch_size,
@@ -45,6 +60,7 @@ model = SegmentNet(out=nums_seg_dict)
 if args.model:
     model.load_state_dict(torch.load(args.model))
 
+# We use Adam algorithm as optimizer
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=20, gamma=0.5)
 num_batch = len(train_set)/batch_size
@@ -57,6 +73,16 @@ except:
 
 model.cuda()
 
+
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
+# Train
 for epoch in range(epochs):
     scheduler.step()
     for index, data in enumerate(train_dataloader, 0):
@@ -70,6 +96,8 @@ for epoch in range(epochs):
 
         predict = predict.view(-1, nums_seg_dict)
         target = target.view(-1, 1)[:, 0] - 1
+
+        # Caculate the loss function
         loss = F.nll_loss(predict, target)
         loss.backward()
         optimizer.step()
@@ -78,6 +106,8 @@ for epoch in range(epochs):
         print('Train Process: %d | %d: %d' % (epoch, index, num_batch))
         print('Loss %f' % loss.item())
         print('Accuracy %f', correct.item()/float(batch_size * 2500))
+
+        # Test accuracy every 10-batch run
         if index % 10 == 0:
             _, data = next(enumerate(test_dataloader, 0))
             points, target = data
@@ -94,9 +124,19 @@ for epoch in range(epochs):
             print('Test Process')
             print('Loss %f' % loss.item())
             print('Accuracy %f', correct.item()/float(batch_size * 2500))
+
+# Save current model
 torch.save(model.state_dict(), 'segmentation/segmentation.pth')
 
 
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
 # Evaluation
 for index, data in tqdm(enumerate(test_dataloader, 0)):
     points, target = data
