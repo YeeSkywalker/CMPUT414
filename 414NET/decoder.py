@@ -4,7 +4,7 @@ import torch
 import torch.nn.parallel
 import torch.utils.data as D
 from torch.autograd import Variable
-from train import DatasetGenerator, SegmentNet
+from model import DatasetGenerator, SegmentNet
 import matplotlib
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
