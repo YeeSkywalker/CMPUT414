@@ -9,6 +9,6 @@ To run our code, please follow the instruciton
 git clone https://github.com/YeeSkywalker/CMPUT414.git
 ```
 
-2. Download data set from https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip and put it under the root file of the repo
+2. Download data set from [Stanford.edu](https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip) and put it under the root file of the repo
 
 3. 
