@@ -1,3 +1,14 @@
 # CMPUT414
 
-python decoder.py --model=/home/ylin3/pointnet.pytorch/utils/Test123/segmentation/segmentation.pth --dataset=/home/ylin3/pointnet.pytorch/shapenetcore_partanno_segmentation_benchmark_v0/ -—object=Chair —-content=99 —-style=199
+This is the 3D style transfer of Team 04. 
+
+To run our code, please follow the instruciton
+
+1. Download the repo from Github
+```
+git clone https://github.com/YeeSkywalker/CMPUT414.git
+```
+
+2. Download data set from https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip and put it under the root file of the repo
+
+3. 
