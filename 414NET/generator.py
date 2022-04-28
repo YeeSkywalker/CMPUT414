@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, default='', help='model')
 parser.add_argument('--content', type=int, default=0, help='content object')
 parser.add_argument('--style', type=int, default=0, help='style object')
-parser.add_argument('--dataset', type=str, defualt='', help='dataset')
+parser.add_argument('--dataset', type=str, default='', help='dataset')
 parser.add_argument('--object', type=str, default='', help='object type')
 
 args = parser.parse_args()
