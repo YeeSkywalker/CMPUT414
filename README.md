@@ -4,6 +4,14 @@ This is the 3D style transfer of Team 04.
 
 To run our code, please follow the instruciton
 
+Set up virtual enviroment
+
+```
+conda create --name yee
+conda activate yee
+pip install torch numpy matplotlib tqdm
+```
+
 1. Clone the repo from Github
 ```
 git clone https://github.com/YeeSkywalker/CMPUT414.git
