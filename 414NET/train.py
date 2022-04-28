@@ -34,10 +34,10 @@ class Y3DNet(nn.Module):
         inputs = self.bn1(self.conv1(inputs))
         inputs = F.relu(inputs)
 
-        inputs = self.bn2(self.conv1(inputs))
+        inputs = self.bn2(self.conv2(inputs))
         inputs = F.relu(inputs)
 
-        inputs = self.bn3(self.conv1(inputs))
+        inputs = self.bn3(self.conv3(inputs))
         inputs = F.relu(inputs)
 
         inputs = torch.max(inputs, 2, True)[0].view(-1, 1024)
