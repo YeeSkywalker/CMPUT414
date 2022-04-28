@@ -9,6 +9,19 @@ import json
 import argparse
 from tqdm import tqdm
 
+'''
+    By Yee Lin solo effort
+'''
+
+# T-net to align the view angle of point clouds
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
 class Y3DNet(nn.Module):
     def __init__(self):
         super(Y3DNet, self).__init__()
@@ -26,6 +39,7 @@ class Y3DNet(nn.Module):
         self.relu = nn.ReLU()
     
     def forward(self, inputs):
+        # Getting the diagonal matrix
         grad_tensor = torch.from_numpy(np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]).astype(np.float32))
         grad_tensor = torch.autograd.Variable(grad_tensor)
         grad_tensor = grad_tensor.view(1, 9).repeat(inputs.size()[0], 1)
@@ -40,6 +54,7 @@ class Y3DNet(nn.Module):
         inputs = self.bn3(self.conv3(inputs))
         inputs = F.relu(inputs)
 
+        # Using max-pooling as symmetric functions to reserve information
         inputs = torch.max(inputs, 2, True)[0].view(-1, 1024)
 
         inputs = self.bn4(self.fc1(inputs))
@@ -50,9 +65,20 @@ class Y3DNet(nn.Module):
 
         inputs = self.fc3(inputs)
 
+        # contatenate the input matrix with the diangonal matrix
         inputs += grad_tensor
         return inputs.view(-1, 3, 3)
 
+# Feature encoder net to fetch global and local features
+'''
+    @InProceedings{Cao_2020_WACV,
+        author = {Cao, Xu and Wang, Weimin and Nagao, Katashi and Nakamura, Ryosuke},
+            title = {PSNet: A Style Transfer Network for Point Cloud Stylization on Geometry and Color},
+            booktitle = {The IEEE Winter Conference on Applications of Computer Vision (WACV)},
+            month = {March},
+            year = {2020}
+        }
+'''
 class FeatureNet(nn.Module):
     def __init__(self, flag = True):
         super(FeatureNet, self).__init__()
@@ -71,6 +97,7 @@ class FeatureNet(nn.Module):
         mat2 = self.yee(inputs)
         inputs = inputs.transpose(2, 1)
 
+        # Getting the batch norm product of two input matrix
         inputs = torch.bmm(inputs, mat2)
 
         inputs = inputs.transpose(2, 1)
@@ -84,14 +111,25 @@ class FeatureNet(nn.Module):
 
         inputs = self.bn3(self.conv3(inputs))
         
+        # Using max-pooling to find the maximun vector of the feature matrix
         inputs = torch.max(inputs, 2, True)[0].view(-1, 1024)
 
+        # For train purpose, contatenate the max vector with each row of the feature matrix
         if not self.flag:
             inputs = inputs.view(-1, 1024, 1).repeat(1, 1, points_num)
             inputs = torch.cat([inputs, features], 1)
         
         return inputs, mat2
-    
+
+# Segmentation Net to segment the object
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
 class SegmentNet(nn.Module):
     def __init__(self, out = 2):
         super(SegmentNet, self).__init__()
@@ -123,11 +161,22 @@ class SegmentNet(nn.Module):
         inputs = self.conv4(inputs)
 
         inputs = inputs.transpose(2, 1).contiguous()
+
+        # Use log softmax to caculate the negative log-likelihood function (loss function)
         inputs = F.log_softmax(inputs.view(-1, self.out), dim=-1)
 
         inputs = inputs.view(batch, points_num, self.out)
         return inputs, mat2
 
+# Define input data helper to read in data
+'''
+    @article{qi2016pointnet,
+        title={PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation},
+        author={Qi, Charles R and Su, Hao and Mo, Kaichun and Guibas, Leonidas J},
+        journal={arXiv preprint arXiv:1612.00593},
+        year={2016}
+    }
+'''
 class DatasetGenerator(D.Dataset):
     def __init__(self, path, train_flag=True, object_type=None, run_type='train'):
         self.category_dict = {}
@@ -156,7 +205,7 @@ class DatasetGenerator(D.Dataset):
         print("data path", self.data_path)
 
         self.seg_dict = {}
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../misc/num_seg_classes.txt'), 'r') as lines:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'num_seg_classes.txt'), 'r') as lines:
             for line in lines:
                 seg_pair = line.strip().split()
                 self.seg_dict[seg_pair[0]] = int(seg_pair[1])
@@ -166,6 +215,7 @@ class DatasetGenerator(D.Dataset):
         print("seg_dict", self.seg_dict)
         print("num_seg_dict", self.num_seg_dict)
 
+    # Get the next item in the current data set
     def __getitem__(self, index):
         path = self.data_path[index]
         points = np.loadtxt(path[1]).astype(np.float32)
@@ -175,10 +225,12 @@ class DatasetGenerator(D.Dataset):
 
         points = points[choice, :]
 
+        # Expand point clouds to hight dimension 
         points = points - np.expand_dims(np.mean(points, axis=0), 0)
         distance = np.max(np.sqrt(np.sum(points**2, axis=1)), 0)
         points = points / distance
 
+        # For the trainning set, we multiply the point cloud with diangonal matrix
         if self.train_flag:
             theta = np.random.uniform(0, np.pi*2)
             rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
